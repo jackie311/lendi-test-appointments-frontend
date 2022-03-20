@@ -1,22 +1,72 @@
-import React from "react";
+import { useState } from "react";
+import styled from "styled-components";
+import {IBrokerProps} from '../../type';
 
-export interface BrokerProps {
-  broker: {
-    name: string;
-    id: number;
-    appointments: { id: number; brokerId: number; date: string }[];
-  };
+const Button = styled.button`
+  display: flex;
+  outline: none;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  padding: 0.3rem;
+  position: relative;
+  height: 1.5rem;
+  cursor: pointer;
+  background: #999;
+  font-weight: bold;
+  align-items: center;
+  justify-content: center;
+
+  &:hover {
+    background: #45404a
+  }
+}
+`
+const Li = styled.li`
+  padding: '5px 0';
+  max-height: ${props => props.open ? '100%' : '0'};
+  overflow: hidden;
+  margin: 3px;
+  transition: max-height 0.2s ease-out;
+  background: rgb(0, 192, 165);
+  cursor: pointer;
+  border-radius: 5px;
+  justify-content: center;
+
+
+  &:hover {
+    background-color: rgb(50, 204, 183);
+  }
+`
+
+interface IProps {
+  broker: IBrokerProps;
+  onClick: React.MouseEventHandler<HTMLButtonElement>;
 }
 
-const Broker = (broker: BrokerProps) => {
+const Broker = ({ broker, onClick }: IProps) => {
+  const [isCollapsed, setIsCollapsed] = useState(true);
   return (
     <li>
-      [broker name]
+      {broker.name}
       <br />
       appointments:
-      <button>Hide appointments</button>
+      {(broker.appointments || []).length > 0 &&
+        <Button
+          onClick={() => setIsCollapsed(!isCollapsed)}>
+          {isCollapsed ? 'Open' : 'Hide'} appointments
+        </Button>}
+
       <ul>
-        <li>[appointment date]</li>
+        {(broker.appointments || []).map(appointment =>
+          <Li 
+            key={appointment.id}
+            open={!isCollapsed}
+            onClick={() => onClick(appointment)}
+          >
+            {appointment.date}
+          </Li>
+        )}
       </ul>
     </li>
   );

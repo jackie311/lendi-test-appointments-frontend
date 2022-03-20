@@ -1,7 +1,10 @@
+import { Dispatch, useState, useEffect } from "react";
 import axios from "axios";
 import styled from "styled-components";
 
 import Broker from "./Broker";
+import { sortByDate, sortByField } from "./helpers";
+import { IBrokerProps, IAppointment } from "../type";
 
 const Wrapper = styled.div`
   display: flex;
@@ -16,34 +19,67 @@ const Heading = styled.strong.attrs({ role: "heading", level: 2 })`
   font-size: 20px;
 `;
 
-type BrokerAppointments = {
-  id: number;
-  name: string;
-  appointments: { id: number; brokerId: number; date: string }[];
-}[];
+const fetchData = (cb: Dispatch<any>) =>
+  Promise.all([
+    axios
+      .get("http://localhost:8080/brokers")
+      .then(({ data }) => data.sort(sortByField('id'))),
+    axios
+      .get("http://localhost:8080/appointments")
+      .then(({ data }) => data)
+  ])
+    .then(([brokers, appointments]) => {
+      const brokerAppointments: IBrokerProps[] = brokers.map((broker: IBrokerProps) => {
+        broker.appointments =
+          appointments
+            .filter(({ brokerId }: { brokerId: number }) =>
+              brokerId === broker.id
+            )
+            .sort(sortByDate('date'));
+        return broker;
+      })
+
+      return cb(brokerAppointments);
+    })
 
 const AppointmentSelect = () => {
-  axios
-    .get("http://localhost:8080/brokers")
-    .then(({ data }) => console.log(data));
-  axios
-    .get("http://localhost:8080/appointments")
-    .then(({ data }) => console.log(data));
+
+  const [brokerAppointments, setBrokerAppointments] = useState<IBrokerProps[]>([]);
+  const [currentAppointment, setCurrentAppointment] = useState<IAppointment>({} as IAppointment);
+
+  useEffect(() => {
+    fetchData(setBrokerAppointments)
+  }, []);
+
+  const update = (appointment: IAppointment, name: string): void => {
+    setCurrentAppointment(appointment);
+    document.body.dispatchEvent(
+      new CustomEvent('update', {
+        detail: { ...appointment, brokerName: name }
+      })
+    );
+  }
 
   return (
     <Wrapper>
       <SideBar>
         <Heading>Amazing site</Heading>
-        TODO: populate brokers
         <ul>
-          {/* {brokerAppointments.map((broker) => (
-            <Broker key={broker.id} broker={broker} />
-          ))} */}
+          {brokerAppointments.map((broker: IBrokerProps) => (
+            <Broker
+              key={broker.id}
+              broker={broker}
+              onClick={(appointment) => update(appointment, broker.name)}
+            />
+          ))}
         </ul>
       </SideBar>
       <div>
         <Heading>Appointment details</Heading>
-        TODO: get appointment details when clicking on one from the left side
+        <br />
+        <div>Broker Id: {currentAppointment.brokerId}</div>
+        <div>Date: {currentAppointment.date}</div>
+        <div>Appointment Id: {currentAppointment.id}</div>
       </div>
     </Wrapper>
   );
