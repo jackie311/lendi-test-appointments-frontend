@@ -1,6 +1,6 @@
 import { useState } from "react";
 import styled from "styled-components";
-import {IBrokerProps} from '../../type';
+import {IBrokerProps, IAppointment} from '../../type';
 
 const Button = styled.button`
   display: flex;
@@ -24,7 +24,7 @@ const Button = styled.button`
 `
 const Li = styled.li`
   padding: '5px 0';
-  max-height: ${props => props.open ? '100%' : '0'};
+  max-height: ${(props: any) => props.open ? '100%' : '0'};
   overflow: hidden;
   margin: 3px;
   transition: max-height 0.2s ease-out;
@@ -41,7 +41,7 @@ const Li = styled.li`
 
 interface IProps {
   broker: IBrokerProps;
-  onClick: React.MouseEventHandler<HTMLButtonElement>;
+  onClick: (appointment: IAppointment) => React.MouseEventHandler<HTMLButtonElement>;
 }
 
 const Broker = ({ broker, onClick }: IProps) => {
@@ -53,6 +53,7 @@ const Broker = ({ broker, onClick }: IProps) => {
       appointments:
       {(broker.appointments || []).length > 0 &&
         <Button
+          data-testid = 'toggle-button'
           onClick={() => setIsCollapsed(!isCollapsed)}>
           {isCollapsed ? 'Open' : 'Hide'} appointments
         </Button>}
@@ -60,10 +61,12 @@ const Broker = ({ broker, onClick }: IProps) => {
       <ul>
         {(broker.appointments || []).map(appointment =>
           <Li 
+            data-testid = 'broker-appointments-list'
             key={appointment.id}
+            /* @ts-ignore */
             open={!isCollapsed}
             onClick={() => onClick(appointment)}
-          >
+            >
             {appointment.date}
           </Li>
         )}

@@ -1,4 +1,4 @@
-import { screen, render } from "@testing-library/react";
+import { screen, render, fireEvent } from "@testing-library/react";
 
 import Broker from "./Broker";
 
@@ -10,14 +10,21 @@ const testBroker = {
 
 describe("Broker Component", () => {
   test("should hide and show appointments on button click", () => {
-    render(<Broker broker={testBroker} />);
+    const handleClick = jest.fn();
+    render(<Broker broker={testBroker} onClick={handleClick} />);
 
     const showAppointmentsButton = screen.getByTestId(
-      "broker-show-appointments-button"
+      "toggle-button"
     );
-    const hideAppointmentsButton = screen.getByTestId(
-      "broker-hide-appointments-button"
-    );
+    expect(showAppointmentsButton.textContent).toBe('Open appointments');
+
+    fireEvent.click(showAppointmentsButton);
+    expect(showAppointmentsButton.textContent).toBe('Hide appointments');
+
+    fireEvent.click(showAppointmentsButton);
+    expect(showAppointmentsButton.textContent).toBe('Open appointments');
+
     const appointmentsList = screen.getByTestId("broker-appointments-list");
+    expect(appointmentsList.textContent).toBe('24/11/2021')
   });
 });
